@@ -4,7 +4,7 @@ extends RefCounted
 static func build(level, area: String, ruined: bool) -> void:
 	var room = level.room
 	if area == "cellar":
-		# A pump gallery joins the existing east corridor at its outer wall.
+		# Stair landing and pump gallery join the original east corridor.
 		for x in range(59, 88):
 			for y in range(12, 24):
 				var edge := x == 87 or y == 12 or y == 23 or (x == 59 and y > 15)
@@ -15,6 +15,7 @@ static func build(level, area: String, ruined: bool) -> void:
 		level.sign_at("НАСОСНАЯ   /   -1",1220,218)
 		level.prop(Furniture.Kind.PIPES,1150,315,118,12)
 		level.lamp(1220,206,3,true)
+		plant_rooms(level)
 		return
 	for y in range(23):
 		for x in range(65):
@@ -76,3 +77,29 @@ static func build(level, area: String, ruined: bool) -> void:
 		level.hide_at(HideSpot.Kind.BATH,570,115)
 		level.prop(Furniture.Kind.DUMPSTER,810,268,32,26)
 		level.hide_at(HideSpot.Kind.DUMPSTER,810,268)
+
+# Return pipes run through the laundry boiler rooms below the motel.
+# Leave accessible dry paths along the walls and a shorter, noisy path through water.
+static func plant_rooms(level) -> void:
+	var room = level.room
+	for x in range(84,155):
+		for y in range(23,77):
+			var edge := x == 84 or x == 154 or y == 23 or y == 76
+			var cross_wall := (y == 40 and x < 147) or (y == 58 and x > 91)
+			var partition := (x in [104,132] and y > 24 and y % 18 < 10)
+			var wet := (x+y) % 19 < 7 and y % 18 in [11,12,13,14]
+			var tile := 1 if edge or cross_wall or partition else (9 if wet else 8)
+			room.set_cell(Vector2i(x,y),0,Vector2i(tile,0))
+	for x in range(85,87):
+		room.set_cell(Vector2i(x,23),0,room.BASEMENT_TILE)
+	for y in [31,49,67]:
+		for x in [96,118,143]:
+			level.prop(Furniture.Kind.PIPES,x*16,y*16,105,14)
+			level.prop(Furniture.Kind.BOILER,x*16+40,y*16-48,38,40)
+		level.lamp(110*16,(y-7)*16,3,true)
+	level.prop(Furniture.Kind.STAIRS,149*16,73*16,54,40)
+	level.lamp(148*16,71*16,3,false)
+	level.sign_at("−1   /   ОБРАТНЫЙ КОНТУР",143*16,74*16)
+	level.sign_at("←   ОБХОД ТРУБОПРОВОДА",123*16,70*16)
+	level.sign_at("ХОЛОДИЛЬНАЯ   →",92*16,53*16)
+	level.sign_at("НАСОСНАЯ   ←",133*16,35*16)

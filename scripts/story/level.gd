@@ -207,6 +207,9 @@ func wake() -> void:
 		Game.enemy_sound("growl",sleeper.position)
 
 func _process(_delta: float) -> void:
+	_hint_timer -= _delta
+	if _hint_timer <= 0:
+		_hint_label.hide()
 	if busy or dialog.visible or player.is_dead:
 		prompt.hide()
 		return
@@ -310,7 +313,7 @@ func use_point(id: String) -> void:
 			say(["Записка|Из табеля вычеркнуть горничную. Личные вещи переданы семье в 1971 году.","Сэм|Но я же говорил с ней вчера… Вот и ключи. Оранжевый брелок."],func(): jump(B.DRIVE,"lobby",player.position))
 		"basement":
 			if Run.beat == B.RETURN:
-				jump(B.FREEZER,"cellar",Vector2(1312,254))
+				jump(B.FREEZER,"cellar",Vector2(2328,1160))
 			else:
 				say(["Сэм|Тяжёлая дверь котельной. Пока мне сюда незачем."])
 		"freezer":
