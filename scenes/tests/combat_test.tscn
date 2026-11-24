@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/level_base.tscn" id="1_main"]
+
+[node name="Main" instance=ExtResource("1_main")]
+map_name = "combat_test"
