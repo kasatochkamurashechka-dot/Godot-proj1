@@ -1,0 +1,19 @@
+keys,en,ru
+UI_HINT,WASD - move  SHIFT - sneak  LMB/SPACE - attack  RMB/E - take / throw / hide  R - restart  F - flashlight  1-4 - maps,WASD - ходьба  SHIFT - красться  ЛКМ/ПРОБЕЛ - удар  ПКМ/E - взять / бросить / спрятаться  R - заново  F - фонарик  1-4 - карты
+UI_DEAD,"YOU'RE DEAD
+press R to restart","ТЫ МЁРТВ
+нажми R, чтобы начать заново"
+UI_FLOOR_CLEAR,FLOOR CLEAR,ЭТАЖ ЗАЧИЩЕН
+UI_ESCAPED,YOU ESCAPED... FOR NOW,ТЫ СБЕЖАЛ... ПОКА ЧТО
+OBJ_FIND_KEYS,FIND YOUR CAR KEYS,НАЙДИ КЛЮЧИ ОТ МАШИНЫ
+OBJ_GET_TO_CAR,GET TO YOUR CAR,ДОБЕРИСЬ ДО МАШИНЫ
+OBJ_NO_KEYS,NO KEYS - FIND YOUR CAR KEYS,ЗАПЕРТО - НАЙДИ КЛЮЧИ ОТ МАШИНЫ
+WEAPON_FISTS,FISTS,КУЛАКИ
+WEAPON_CROWBAR,CROWBAR,МОНТИРОВКА
+WEAPON_BAT,BAT,БИТА
+WEAPON_BOTTLE,BOTTLE,БУТЫЛКА
+HINT_LOCKED,LOCKED,ЗАПЕРТО
+HINT_GO_DOWN,E - go down to the basement,E - спуститься в подвал
+HINT_GO_UP,E - go up to the boiler room,E - подняться в котельную
+HINT_HATCH_UP,E - climb up through the hatch,E - вылезти через люк
+HINT_HATCH_DOWN,E - climb down the hatch,E - спуститься в люк
