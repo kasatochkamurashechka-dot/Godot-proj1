@@ -38,7 +38,7 @@ const SWING_TIME := 0.12      # сколько длится анимация з�
 const PICKUP_RADIUS := 18.0   # с какого расстояния можно подобрать оружие
 
 # --- Спрайт ---
-const SPRITE_SHEET := preload("res://assets/sprites/sam.png")
+const SPRITE_SHEET_PATH := "res://assets/sprites/sam.png"
 const SPRITE_DIRECTIONS := 32         # строки листа: направления, по 11,25° (0 — лицом к нам)
 const SPRITE_WALK_FRAMES := 4         # столбцы: 0 — стоит, 1 — шаг, 2 — стоит, 3 — шаг другой ногой
 const SPRITE_FOOT := Vector2(10, 24)  # где в клетке листа стоят ноги (см. tools/make_sam_sprites.py)
@@ -91,7 +91,7 @@ func _ready() -> void:
 	_shadow.show_behind_parent = true
 	add_child(_shadow)
 	_sprite = Sprite2D.new()
-	_sprite.texture = SPRITE_SHEET
+	_sprite.texture = load(SPRITE_SHEET_PATH)
 	_sprite.hframes = SPRITE_WALK_FRAMES
 	_sprite.vframes = SPRITE_DIRECTIONS
 	_sprite.centered = false

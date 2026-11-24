@@ -248,6 +248,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_tree().change_scene_to_file(BASE)
 	elif not busy and not player.is_dead and not player.is_hidden and not target.is_empty():
 		use_point(target.id)
+
 func say(lines: Array,after := Callable()) -> void:
 	dialog.begin(lines,after if after.is_valid() else func(): pass)
 
