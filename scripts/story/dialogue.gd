@@ -6,6 +6,8 @@ var voice := AudioStreamPlayer.new()
 var lines: Array
 var finished: Callable
 var shown := 0.0
+var portrait := Sprite2D.new()
+const CAST := {"Сэм":0,"Хозяин":1,"Горничная":2,"Гость":3,"Посетитель":4}
 var last_pulse := 0
 
 func _ready() -> void:
@@ -16,17 +18,23 @@ func _ready() -> void:
 	box.border_color = Color("#d68d54")
 	box.border_width_left = 3
 	add_theme_stylebox_override("panel", box)
+	portrait.texture = preload("res://assets/story/faces.png")
+	portrait.hframes = 5
+	portrait.vframes = 2
+	portrait.scale = Vector2(0.6,0.6)
+	portrait.position = Vector2(53,52)
+	add_child(portrait)
 	add_child(speaker)
 	speaker.position = Vector2(17,5)
 	speaker.modulate = Color("#f4bb83")
 	speaker.add_theme_font_size_override("font_size",13)
 	add_child(line)
 	line.position = Vector2(17,26)
-	line.size = Vector2(546,50)
+	line.size = Vector2(450,72)
 	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	line.add_theme_font_size_override("font_size",15)
 	var next := Label.new()
-	next.text = "Enter  ›"
+	next.text = "F  ›"
 	next.position = Vector2(510,76)
 	next.add_theme_font_size_override("font_size",12)
 	add_child(next)
@@ -42,10 +50,7 @@ func begin(script: Array, callback: Callable) -> void:
 	next_line()
 
 func advance() -> void:
-	if line.visible_characters < line.text.length():
-		line.visible_characters = line.text.length()
-		shown = line.text.length()
-	elif lines.is_empty():
+	if lines.is_empty():
 		hide()
 		get_tree().paused = false
 		finished.call()
@@ -55,8 +60,13 @@ func advance() -> void:
 func next_line() -> void:
 	var parts := str(lines.pop_front()).split("|",true,1)
 	speaker.text = parts[0]
+	portrait.visible = CAST.has(speaker.text)
+	var tense := (Run.beat >= Run.Beat.WOUNDED and speaker.text == "Сэм") or (speaker.text == "Горничная" and lines.is_empty()) or (speaker.text == "Хозяин" and lines.size() <= 2) or (speaker.text == "Гость" and lines.size() <= 2) or (speaker.text == "Посетитель" and lines.is_empty())
+	portrait.frame = int(CAST.get(speaker.text,0)) + (5 if tense else 0)
+	line.position.x = 115 if portrait.visible else 17
+	speaker.position.x = line.position.x
 	line.text = parts[1]
-	line.visible_characters = 0
+	line.visible_characters = -1
 	shown = 0
 	last_pulse = -1
 	voice.pitch_scale = {"Хозяин":0.65,"Горничная":1.6,"Гость":0.8}.get(speaker.text,1.12)
@@ -64,7 +74,7 @@ func next_line() -> void:
 func _process(delta: float) -> void:
 	if visible and shown < line.text.length():
 		shown += delta*40
-		line.visible_characters = mini(int(shown),line.text.length())
+
 		var pulse := floori(shown/3)
 		if pulse != last_pulse and speaker.text not in ["Записка","3:33"]:
 			voice.play()

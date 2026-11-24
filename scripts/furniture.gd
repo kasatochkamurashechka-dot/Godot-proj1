@@ -142,13 +142,17 @@ func _draw_car(r: Rect2) -> void:
 
 
 func _draw_stairs(r: Rect2) -> void:
-	draw_rect(r, Color(0.36, 0.34, 0.4))
-	var y := r.position.y + 2
-	while y < r.end.y:                                      # ступени
-		draw_line(Vector2(r.position.x + 3, y), Vector2(r.end.x - 3, y), Color(0.55, 0.53, 0.6), 1.0)
-		y += 6
-	draw_line(r.position + Vector2(1, 0), Vector2(r.position.x + 1, r.end.y), METAL, 2.0)  # перила
-	draw_line(Vector2(r.end.x - 1, r.position.y), r.end - Vector2(1, 0), METAL, 2.0)
+	draw_rect(r.grow(2),DARK)
+	var depth := r.size.y / 7.0
+	for i in range(7):
+		var tread := Rect2(r.position+Vector2(2,i*depth),Vector2(r.size.x-4,depth))
+		draw_rect(tread,Color("#373643").lightened(0.055*i))
+		draw_line(tread.position,tread.position+Vector2(tread.size.x,0),Color("#bcb2a0"),1.5)
+	for x in [r.position.x,r.end.x]:
+		for i in range(3):
+			var foot := Vector2(x,r.position.y+i*r.size.y/2)
+			draw_line(foot,foot+Vector2(-2,-7),METAL,2)
+		draw_line(Vector2(x-2,r.position.y-7),Vector2(x-2,r.end.y-7),Color("#e7bd82"),2)
 
 
 func _draw_boiler(r: Rect2) -> void:

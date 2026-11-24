@@ -18,7 +18,7 @@ for path in sorted((ROOT / "Арты").iterdir()):
     ids = np.argsort(np.bincount(labels.ravel())[1:])[-32:] + 1
     boxes = ndimage.find_objects(labels)
     ids = sorted(ids, key=lambda i: boxes[i-1][0].start + boxes[i-1][0].stop)
-    sheet = Image.new("RGBA", (24*8, 30*4))
+    sheet = Image.new("RGBA", (38*8, 44*4))
     for row in range(4):
         ordered = sorted(ids[row*8:row*8+8], key=lambda i: boxes[i-1][1].start)
         for col, i in enumerate(ordered):
@@ -26,17 +26,17 @@ for path in sorted((ROOT / "Арты").iterdir()):
             mask = ndimage.binary_fill_holes(labels[box] == i)
             part = Image.fromarray(rgb[box].astype("uint8"))
             part.putalpha(Image.fromarray((mask*255).astype("uint8")))
-            part.thumbnail((22, 25), Image.Resampling.LANCZOS)
-            sheet.paste(part, (24*col+(24-part.width)//2, 30*row+27-part.height))
+            part.thumbnail((36, 39), Image.Resampling.LANCZOS)
+            sheet.paste(part, (38*col+(38-part.width)//2, 44*row+41-part.height))
     sheet.save(OUT / (path.stem+".png"))
     if path.stem == "Постоялец_5":
         injured = sheet.copy()
         draw = ImageDraw.Draw(injured)
         for row in range(4):
             for col in range(8):
-                x, y = col*24, row*30
+                x, y = col*38+7, row*44+2
                 draw.line((x+10,y+5,x+14,y+4), fill="#d8ceb7", width=2)
-                draw.line((x+10,y+12,x+13,y+17), fill="#892d36", width=3)
+                draw.line((x+10,y+18,x+15,y+26), fill="#892d36", width=3)
         injured.save(OUT / "Раненый.png")
 
 def sound(name, samples):

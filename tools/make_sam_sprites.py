@@ -28,9 +28,9 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "assets" / "sprites" / "source" / "sam_turnaround.webp"
 OUT = ROOT / "assets" / "sprites" / "sam.png"
 
-HEIGHT = 24        # рост Сэма в игре, пикселей
-CELL_W = 20        # размер клетки листа (с запасом под шаги)
-CELL_H = 26
+HEIGHT = 38        # рост Сэма в игре, пикселей
+CELL_W = 34        # размер клетки листа (с запасом под шаги)
+CELL_H = 42
 FOOT_Y = CELL_H - 2  # строка, на которой стоят ноги (в клетке листа)
 DIRECTIONS = 32
 WALK_FRAMES = 4    # 0 — стоит, 1 — шаг одной ногой, 2 — стоит, 3 — шаг другой

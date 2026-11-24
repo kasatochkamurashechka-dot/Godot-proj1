@@ -15,6 +15,7 @@ const LANGUAGE := "ru"
 ## Звуки игры. Файлы создаёт tools/generate_sounds.py.
 ## Если у звука несколько вариантов — каждый раз берётся случайный (шаги не звучат одинаково).
 const SOUNDS := {
+	"breath": ["res://assets/story/breath.wav"],
 	"step": ["res://assets/sounds/step_1.wav", "res://assets/sounds/step_2.wav", "res://assets/sounds/step_3.wav"],
 	"swing": ["res://assets/sounds/swing.wav"],
 	"punch": ["res://assets/sounds/punch.wav"],
@@ -26,7 +27,7 @@ const SOUNDS := {
 	"growl": ["res://assets/sounds/growl.wav"],
 	"transform": ["res://assets/sounds/transform.wav"],
 	"creature_hit": ["res://assets/sounds/creature_hit.wav"],
-	"owner_step": ["res://assets/sounds/owner_step.wav"],
+	"owner_step": ["res://assets/sounds/boot_1.wav","res://assets/sounds/boot_2.wav","res://assets/sounds/boot_3.wav"],
 	"spotted": ["res://assets/sounds/spotted.wav"],
 	"key": ["res://assets/sounds/key.wav"],
 	"escape": ["res://assets/sounds/escape.wav"],

@@ -16,6 +16,9 @@ static func build(level, area: String, ruined: bool) -> void:
 		level.prop(Furniture.Kind.PIPES,1150,315,118,12)
 		level.lamp(1220,206,3,true)
 		plant_rooms(level)
+		level.hide_at(HideSpot.Kind.LOCKER,1250,273)
+		level.prop(Furniture.Kind.SHELF,1100,348,92,20)
+		level.hide_at(HideSpot.Kind.WARDROBE,283,250)
 		return
 	for y in range(23):
 		for x in range(65):
@@ -26,14 +29,20 @@ static func build(level, area: String, ruined: bool) -> void:
 				tile = 2
 			var wall := x == 0 or y == 0 or x == 64 or y == 22
 			if area != "parking":
-				wall = wall or (y < 10 and x in [16,32,48])
+				wall = wall or (y < 10 and x in [16,32,48] and not (area == "lobby" and y in [3,4]))
 				wall = wall or (y == 10 and x % 16 not in [7,8])
 			room.set_cell(Vector2i(x,y),0,Vector2i(1 if wall else tile,0))
 	if area == "parking":
 		for x in [144,480,650]:
 			var car = level.prop(Furniture.Kind.CAR,x,192,34,64)
 			car.color = Color("#ed792d") if x == 144 else Color("#457078")
-		level.prop(Furniture.Kind.VENDING,840,100,28,24)
+		level.prop(Furniture.Kind.VENDING,786,100,28,24)
+		level.prop(Furniture.Kind.COUNTER,875,99,134,36)
+		var facade := preload("res://scripts/story/entrance.gd").new()
+		level._add_prop(facade,Vector2(875,125))
+		level.prop(Furniture.Kind.DUMPSTER,968,235,42,30)
+		level.hide_at(HideSpot.Kind.DUMPSTER,968,235)
+		level.prop(Furniture.Kind.CRATES,402,302,48,34)
 		level.sign_at("МОТЕЛЬ  •  3:33",810,75)
 		level.sign_at("ТРАССА  66",425,55)
 		level.sign_at("Ресепшен   →",264,205)
@@ -54,6 +63,10 @@ static func build(level, area: String, ruined: bool) -> void:
 			level.prop(Furniture.Kind.BED,62+i*256,65,36,52)
 			level.prop(Furniture.Kind.DESK,194+i*256,53,36,22)
 			level.sign_at(str(203+i),118+i*256,149)
+			level.hide_at(HideSpot.Kind.BED,62+i*256,65)
+			level.hide_at(HideSpot.Kind.WARDROBE,205+i*256,113)
+		level.prop(Furniture.Kind.VENDING,483,310,26,32)
+		level.prop(Furniture.Kind.SHELF,809,320,74,22)
 		level.prop(Furniture.Kind.STAIRS,72,306,55,40)
 		level.prop(Furniture.Kind.STAIRS,963,306,55,40)
 		if ruined:
@@ -64,6 +77,12 @@ static func build(level, area: String, ruined: bool) -> void:
 		level.sign_at("Ресепшен ↑     Ресторан →     Персонал →",175,231)
 		level.sign_at("← Парковка     Котельная →",710,306)
 		level.prop(Furniture.Kind.COUNTER,136,85,100,18)
+		level.hide_at(HideSpot.Kind.LOCKER,496,125)
+		level.hide_at(HideSpot.Kind.WARDROBE,725,90)
+		level.prop(Furniture.Kind.WASHERS,700,34,65,24)
+		level.prop(Furniture.Kind.VENDING,285,31,22,25)
+		for seat in [324,446]:
+			level.prop(Furniture.Kind.COUNTER,seat,115,36,10)
 		level.sign_at("ЗАКУСОЧНАЯ",325,45)
 		for x in [324,446]:
 			level.prop(Furniture.Kind.DESK,x,88,44,28)

@@ -110,7 +110,7 @@ func move_to_last_seen(speed: float) -> void:
 		velocity = Vector2.ZERO
 		return
 	var step := last_seen
-	if not Game.line_of_sight(global_position, last_seen):
+	if not clear_walk_to(last_seen):
 		step = _next_route_point()
 		if step == Vector2.INF:
 			has_target = false  # туда не дойти — бросаем
@@ -122,6 +122,11 @@ func move_to_last_seen(speed: float) -> void:
 
 
 ## Следующая точка маршрута в обход стен. Vector2.INF — пути нет.
+func clear_walk_to(goal: Vector2) -> bool:
+	var query := PhysicsRayQueryParameters2D.create(global_position, goal, 9)
+	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
+
+
 func _next_route_point() -> Vector2:
 	if _route_goal != last_seen:
 		_route_goal = last_seen
@@ -143,7 +148,7 @@ func play_footsteps(delta: float, sound := "step", volume_db := -8.0, max_distan
 		return
 	_footstep_timer -= delta
 	if _footstep_timer <= 0.0:
-		Game.enemy_sound(sound, global_position, volume_db, max_distance)
+		Game.play_sound(sound, global_position, volume_db, 0.11, max_distance)
 		_footstep_timer = STEP_LENGTH / speed
 
 

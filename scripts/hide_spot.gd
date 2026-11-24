@@ -19,7 +19,7 @@ const SOUNDS := {
 	Kind.WARDROBE: "wardrobe", Kind.LOCKER: "bin_lid", Kind.BATH: "rustle",
 	Kind.BED: "rustle", Kind.CAR: "rustle", Kind.DUMPSTER: "bin_lid", Kind.SHELF: "rustle",
 }
-const INTERACT_GAP := 10.0  # с какого расстояния от края укрытия можно в него залезть
+const INTERACT_GAP := 20.0  # с какого расстояния от края укрытия можно в него залезть
 
 const WOOD := Color(0.28, 0.16, 0.1)
 const WOOD_EDGE := Color(0.55, 0.36, 0.22)

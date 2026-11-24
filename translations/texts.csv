@@ -1,5 +1,5 @@
 keys,en,ru
-UI_HINT,WASD - move  SHIFT - sneak  LMB/SPACE - attack  RMB/E - take / throw / hide  R - restart  F - flashlight  1-4 - maps,WASD - ходьба  SHIFT - красться  ЛКМ/ПРОБЕЛ - удар  ПКМ/E - взять / бросить / спрятаться  R - заново  F - фонарик  1-4 - карты
+UI_HINT,WASD - move  SHIFT - sneak  LMB/SPACE - attack  RMB/E - take / throw / hide  R - restart  Q - flashlight  1-4 - maps,WASD - ходьба  SHIFT - красться  ЛКМ/ПРОБЕЛ - удар  ПКМ/E - взять / бросить / спрятаться  R - заново  Q - фонарик  1-4 - карты
 UI_DEAD,"YOU'RE DEAD
 press R to restart","ТЫ МЁРТВ
 нажми R, чтобы начать заново"

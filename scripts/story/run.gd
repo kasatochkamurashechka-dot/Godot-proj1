@@ -14,6 +14,7 @@ const GOALS := [
 var beat := Beat.ARRIVAL
 var area := "parking"
 var spawn := Vector2(188, 208)
+var stair_arrival := false
 var light_on := false
 var checkpoint: Dictionary = {}
 

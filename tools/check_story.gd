@@ -20,7 +20,8 @@ func settle() -> void:
 
 func enter() -> void:
 	var key := InputEventKey.new()
-	key.keycode = KEY_ENTER
+	key.physical_keycode = KEY_F
+	key.keycode = KEY_F
 	key.pressed = true
 	root.push_input(key)
 	key.pressed = false
@@ -53,6 +54,7 @@ func visit(id: String) -> void:
 		fail("Wrong interaction at "+id)
 		return
 	enter()
+	await create_timer(0.32).timeout
 	await settle()
 	await drain()
 	print("Passed ",id," / beat ",run.beat)
@@ -65,10 +67,15 @@ func drain() -> void:
 		enter()
 		await settle()
 
+	if run.stair_arrival:
+		await create_timer(0.4).timeout
+		await settle()
+
 func check() -> void:
 	run = root.get_node("Run")
 	change_scene_to_file(ProjectSettings.get_setting("application/run/main_scene"))
 	await settle()
+	await drain()
 	await create_timer(1.7).timeout
 	Input.action_press("move_right")
 	var parked: Vector2 = level.player.position
@@ -78,7 +85,7 @@ func check() -> void:
 	if level.player.position.x < parked.x + 12:
 		fail("Player cannot walk from car")
 		return
-	for id in ["entrance","desk","up","maid","bed","guest"]:
+	for id in ["entrance","visitor","desk","up","maid","bed","guest"]:
 		await visit(id)
 		if failed: return
 	level.player.die()
@@ -96,24 +103,37 @@ func check() -> void:
 	await create_timer(2.0).timeout
 	await settle()
 	await drain()
-	for id in ["down","keys","outside","car"]:
+	await visit("down")
+	if failed: return
+	# Simulate an observed entrance, then break pursuit inside the office.
+	var hunter = level.innkeeper
+	hunter.set_physics_process(false)
+	hunter.state = hunter.State.CHASE
+	level.player.position = Vector2(655,104)
+	await settle()
+	if level.available("keys") or level.target.get("id","") == "keys":
+		fail("Keys offered while pursued")
+		return
+	hunter.state = hunter.State.PATROL
+	await settle()
+	if level.available("keys"):
+		fail("Must leave and re-enter unseen")
+		return
+	level.player.position = Vector2(638,201)
+	await settle()
+	for id in ["keys","outside","car"]:
 		await visit(id)
 		if failed: return
 	await create_timer(4.5).timeout
 	await settle()
 	await drain()
-	for id in ["entrance","basement","freezer","crates","journal","end"]:
+	for id in ["entrance","basement","freezer","crates","journal"]:
 		await visit(id)
 		if failed: return
-	await create_timer(5.5).timeout
-	if not level.ended:
-		fail("No demo ending")
+	await visit("end")
+	if failed: return
+	if run.beat != run.Beat.END or level.clear_label.visible:
+		fail("Expected final fade without credits")
 		return
-	enter()
-	await settle()
-	if run.beat != run.Beat.ARRIVAL:
-		fail("Replay failed")
-		return
-	await create_timer(2.0).timeout
-	print("PASS: full story, checkpoint, navigation and replay")
-	quit()
+	print("PASS: intro, visitor, two loops, unseen entry, altar and final fade")
+	# The game's own fade calls quit.

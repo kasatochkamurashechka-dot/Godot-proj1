@@ -134,8 +134,7 @@ func _chase(sees: bool) -> void:
 			velocity = Vector2.ZERO
 			player.die(to_player.normalized())
 			return
-		velocity = to_player.normalized() * CHASE_SPEED
-		rotation = to_player.angle()
+		move_to_last_seen(CHASE_SPEED)
 		return
 
 	# Только что потеряли из виду — прокладываем путь туда, где видели в последний раз

@@ -10,11 +10,14 @@ const CELLAR := "res://scenes/story/cellar.tscn"
 var points: Array[Dictionary] = []
 var dialog := Dialogue.new()
 var prompt := Label.new()
+var nearby: Node2D
 var target: Dictionary
 var opponent: EnemyBase
 var sleeper: Guest
 var busy := false
-var ended := false
+var innkeeper: MotelOwner
+var was_in_staff := false
+var unseen_entry := false
 var curtain := ColorRect.new()
 
 func _ready() -> void:
@@ -53,7 +56,22 @@ func _ready() -> void:
 	populate()
 	if Run.checkpoint.is_empty():
 		Run.remember(player.position)
-		arrive()
+		curtain.show()
+		var road := preload("res://scripts/story/tunnel.gd").new()
+		curtain.add_child(road)
+		busy = true
+		say(["Сэм|В детстве Лиза просила меня сигналить в туннелях. Ей нравилось, как эхо едет за нами.",
+			"Сэм|Во вторник она позвонила из мотеля. Я сказал, что перезвоню после смены. С тех пор трубку никто не берёт.",
+			"Сэм|Три штата за спиной. На её открытке те же три цифры, что на вывеске. Только бы сестра ещё была здесь."],
+			func(): road.queue_free(); curtain.hide(); arrive())
+	elif Run.stair_arrival:
+		Run.stair_arrival = false
+		curtain.show()
+		var fade := create_tween()
+		fade.tween_property(curtain,"modulate:a",0.0,0.24)
+		await fade.finished
+		curtain.hide()
+		curtain.modulate.a = 1
 
 func arrive() -> void:
 	busy = true
@@ -89,18 +107,13 @@ func hide_at(kind: int,x: int,y: int) -> void:
 	spot.size = Vector2(32,26)
 	_add_prop(spot,Vector2(x,y))
 
-func sign_at(words: String,x: int,y: int) -> Label:
-	var label := Label.new()
-	label.text = words
-	label.add_theme_font_size_override("font_size",9)
-	label.add_theme_constant_override("outline_size",2)
-	label.position = Vector2(x,y)
-	props.add_child(label)
-	return label
+func sign_at(words: String,x: int,y: int) -> void:
+	var inlay := preload("res://scripts/story/inlay.gd").new()
+	inlay.inscription = words
+	_add_prop(inlay,Vector2(x,y))
 
 func mark(id: String,title: String,x: int,y: int) -> void:
 	var pos := Vector2(x,y)
-	sign_at(title,x-16,y-19)
 	points.append({"id":id,"title":title,"pos":pos})
 
 func figure(sheet: String,pos: Vector2,walk := Vector2.ZERO):
@@ -134,6 +147,7 @@ func populate() -> void:
 				sign_at("Аварийный спуск",245,315)
 		"lobby":
 			mark("outside","Парковка",65,225)
+			sign_at("↑  2 ЭТАЖ",65,330)
 			mark("up","На второй этаж",114,298)
 			mark("basement","В подвал",872,117)
 			if Run.beat <= B.BED:
@@ -141,18 +155,21 @@ func populate() -> void:
 			if Run.beat == B.ARRIVAL:
 				mark("desk","Позвонить в звонок",136,104)
 			if Run.beat <= B.BED:
+				mark("visitor","Поговорить с посетителем",320,137)
 				for i in range(3):
-					figure("Постоялец_%d" % (i+3),Vector2(320+80*i,137),Vector2(19,0))
+					figure("Постоялец_%d" % (i+3),Vector2(320+80*i,137),Vector2.ZERO if i == 0 else Vector2(19,0))
 			if Run.beat in [B.KEYS,B.DRIVE]:
 				if Run.beat == B.KEYS:
 					mark("keys","Журнал смены и ключница",655,104)
-				var owner := foe(OWNER_SCENE,Vector2(815,205),"Хозяин_мрачный") as MotelOwner
-				owner.patrol_points.assign([Vector2(875,93),Vector2(650,125),Vector2(420,245),Vector2(128,125),Vector2(815,205)])
+				innkeeper = foe(OWNER_SCENE,Vector2(815,205),"Хозяин_мрачный") as MotelOwner
+				innkeeper.patrol_points.assign([Vector2(875,93),Vector2(650,125),Vector2(420,245),Vector2(128,125),Vector2(815,205)])
 			if Run.beat == B.RETURN:
 				foe(WATCHMAN_SCENE,Vector2(520,290),"Сторож")
 				foe(GUEST_SCENE,Vector2(580,200),"Постоялец_3_мрачный")
 				foe(GUEST_SCENE,Vector2(900,205),"Постоялец_4_мрачный")
 		"upper":
+			sign_at("↓  ХОЛЛ",55,330)
+			sign_at("АВАРИЙНЫЙ СПУСК",897,330)
 			mark("down","На первый этаж",114,298)
 			mark("escape","Аварийный спуск",923,305)
 			if Run.beat in [B.MAID,B.BED]:
@@ -221,42 +238,75 @@ func _process(_delta: float) -> void:
 		say(["Сэм|Это тот парень с парковки… Пока лежит, надо уходить."],func(): jump(B.GUARD,"upper",player.position))
 		return
 	target = {}
-	var best := 38.0
+	update_staff_entry()
+	var best := 60.0
 	for point in points:
+		if not available(point.id):
+			continue
 		var dist := player.position.distance_to(point.pos)
 		if dist < best and Game.line_of_sight(player.position,point.pos):
 			target = point
 			best = dist
-	prompt.visible = not player.is_hidden
-	prompt.text = "Enter  •  "+str(target.title) if not target.is_empty() else controls()
+	nearby = player._nearest_interactable()
+	var action := str(target.get("title",""))
+	if player.is_hidden:
+		action = "Выйти из укрытия"
+	elif action.is_empty() and nearby is HideSpot:
+		action = "Спрятаться"
+	elif action.is_empty() and not nearby and player.combat_enabled and player.weapon == "" and player.nearby_weapon():
+		action = "Поднять оружие"
+	elif action.is_empty() and nearby is Door and (not nearby.locked or nearby.is_open):
+		action = "Закрыть дверь" if nearby.is_open else "Открыть дверь"
+	prompt.visible = not action.is_empty()
+	prompt.text = "F  •  "+action
 
-func controls() -> String:
-	if Run.beat == B.ARRIVAL:
-		return "WASD  •  движение     Enter  •  взаимодействие"
-	if Run.beat == B.FIGHT:
-		return "ЛКМ  •  удар     F  •  фонарь"
-	if Run.beat in [B.KEYS,B.DRIVE]:
-		return "Shift  •  красться     E  •  укрытие     F  •  фонарь"
-	return "Enter  •  взаимодействие"
+func update_staff_entry() -> void:
+	if not innkeeper or Run.beat != B.KEYS:
+		return
+	var inside := Rect2(528,16,240,144).has_point(player.position)
+	var seen := innkeeper.state == MotelOwner.State.CHASE or innkeeper._sees_player()
+	if inside and not was_in_staff:
+		unseen_entry = not seen
+	if not inside or seen:
+		unseen_entry = false
+	was_in_staff = inside
+	$UI/Hint.text = "Он видел тебя. Уйди и вернись незаметно." if inside and not unseen_entry else Run.GOALS[Run.beat]
+
+func available(id: String) -> bool:
+	match id:
+		"keys": return unseen_entry and innkeeper and innkeeper.state != MotelOwner.State.CHASE and not innkeeper._sees_player()
+		"basement": return Run.beat == B.RETURN
+		"up": return Run.beat != B.ARRIVAL
+		"bed": return Run.beat == B.BED
+		"escape": return Run.beat == B.CHASE
+		"down": return Run.beat not in [B.FIGHT,B.GUARD,B.CHASE]
+	return true
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not (event is InputEventKey and event.pressed and not event.echo and event.keycode in [KEY_ENTER,KEY_KP_ENTER]):
+	if not event.is_action_pressed("interact"):
 		return
 	get_viewport().set_input_as_handled()
 	if dialog.visible:
 		dialog.advance()
-	elif ended:
-		get_tree().paused = false
-		Run.reset()
-		get_tree().change_scene_to_file(BASE)
-	elif not busy and not player.is_dead and not player.is_hidden and not target.is_empty():
+	elif not busy and not player.is_dead and not player.is_hidden and not target.is_empty() and available(target.id):
 		use_point(target.id)
+	elif not busy and not player.is_dead and prompt.visible and (player.is_hidden or nearby or (player.combat_enabled and player.weapon == "" and player.nearby_weapon())):
+		player._interact()
 
 func say(lines: Array,after := Callable()) -> void:
 	dialog.begin(lines,after if after.is_valid() else func(): pass)
 
 func jump(beat: int,area: String,pos: Vector2,save := true) -> void:
 	busy = true
+	if area != Run.area and ("upper" in [area,Run.area] or area == "cellar"):
+		Run.stair_arrival = true
+		get_tree().paused = true
+		curtain.modulate.a = 0.0
+		curtain.show()
+		var fade := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		fade.tween_property(curtain,"modulate:a",1.0,0.22)
+		await fade.finished
+		get_tree().paused = false
 	Run.light_on = player.flashlight_on
 	if beat == B.FIGHT:
 		Run.light_on = true
@@ -284,7 +334,9 @@ func use_point(id: String) -> void:
 			else:
 				jump(Run.beat,"lobby",Vector2(112,275))
 		"desk":
-			say(["Хозяин|Доброй ночи, Сэм. Надолго к нам?","Сэм|Я… Мы знакомы?","Хозяин|Все остаются.","Хозяин|Ключи от машины оставьте мне. Переставлю поближе. Ваш номер — 204, второй этаж.","Сэм|Часы за стойкой стоят. Три тридцать три."],func(): jump(B.MAID,"lobby",player.position))
+			say(["Хозяин|Доброй ночи, Сэм. Надолго к нам?","Сэм|Мы знакомы? Я ищу сестру. Лиза, вот фотография. Она звонила отсюда.","Хозяин|Все остаются.","Хозяин|Ключи от машины оставьте мне. Переставлю поближе. Ваш номер — 204, второй этаж.","Сэм|Часы за стойкой стоят. Три тридцать три."],func(): jump(B.MAID,"lobby",player.position))
+		"visitor":
+			say(["Посетитель|Если услышите свой голос из номера, не отвечайте.","Сэм|А если оттуда позовёт моя сестра?","Посетитель|Если услышите свой голос из номера, не отвечайте."])
 		"maid":
 			say(["Сэм|Извините, где двести четвёртый?","Горничная|Свежее бельё. Чистые полотенца.","Сэм|Вы меня слышите?","Горничная|Свежее бельё. Чистые полотенца."],func(): jump(B.BED,"upper",player.position))
 		"bed":
@@ -294,7 +346,16 @@ func use_point(id: String) -> void:
 			else:
 				say(["Сэм|Та горничная в галерее хотела мне что-то сказать."])
 		"guest":
-			say(["Гость|Пару недель назад я тоже снял здесь номер. Каждую ночь часы встают. Каждую ночь — сначала.","Гость|Я слышал его под полом. Хочешь выбраться — спускайся в подвал. Возьми фонарь…","Сэм|Эй… Он не дышит. У двери монтировка. Кто там?"],func(): jump(B.FIGHT,"upper",Vector2(621,115)))
+			say(["Гость|Прикрой дверь. Тихо. У неё язычок щёлкает.",
+				"Сэм|Я прижму полотенце. Держите вот здесь. Как вас зовут?",
+				"Гость|Фрэнк. В кармане снимок, только не заляпай…",
+				"Сэм|Оставьте его себе, Фрэнк. Вы видели эту девушку? Это моя сестра.",
+				"Гость|Она стучала вчера. Или две недели назад. Я не открыл. У неё был голос моей жены.",
+				"Сэм|Куда она пошла?",
+				"Гость|К лестнице. Я слушал шаги, пока они не стали слышны под кроватью. Часы опять стояли.",
+				"Сэм|Я вернусь за вами. Фрэнк? Сожмите мою руку.",
+				"Гость|Фонарь возьми. Пальцем стекло прикрой. Там, внизу… видят свет.",
+				"Сэм|Фрэнк?.. Чёрт. Кто там за дверью?"],func(): jump(B.FIGHT,"upper",Vector2(621,115)))
 		"guard":
 			say(["Сэм|Сэр! Там человек ранен, вызовите…","Сэм|Что с вашим лицом?!"],func(): jump(B.CHASE,"upper",Vector2(748,228)))
 		"escape":
@@ -323,7 +384,8 @@ func use_point(id: String) -> void:
 		"journal":
 			say(["Записка|За каждое имя в книге — ещё одна ночь хозяину. Сторож продержался дольше всех. Ему оставили форму.","Сэм|Ключи только от номеров. А внизу кто-то дышит."],func(): advance_here(B.DOOR,"end","Дверь вниз",496,688))
 		"end":
-			finish()
+			Game.play_sound("breath", Vector2.INF, -10.0)
+			say(["Сэм|Ва та фа..."],finish)
 
 func advance_here(beat: int,id: String,title: String,x: int,y: int) -> void:
 	points.clear()
@@ -367,18 +429,17 @@ func tunnel() -> void:
 
 func finish() -> void:
 	busy = true
-	get_tree().paused = true
-	var breath := AudioStreamPlayer.new()
-	breath.stream = preload("res://assets/story/breath.wav")
-	add_child(breath)
-	breath.play()
-	await breath.finished
-	curtain.show()
-	clear_label.text = "МОТЕЛЬ «3:33»\nКонец демо\n\nEnter  •  С начала"
-	clear_label.reparent(curtain)
-	clear_label.show()
-	ended = true
 	Run.beat = B.END
+	for audio_class in ["AudioStreamPlayer","AudioStreamPlayer2D"]:
+		for audio in get_tree().root.find_children("*",audio_class,true,false):
+			audio.stop()
+	get_tree().paused = true
+	curtain.modulate.a = 0.0
+	curtain.show()
+	var fade := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	fade.tween_property(curtain,"modulate:a",1.0,0.35)
+	await fade.finished
+	get_tree().quit()
 
 func _on_player_died() -> void:
 	if busy:

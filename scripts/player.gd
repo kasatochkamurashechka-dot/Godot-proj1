@@ -21,7 +21,7 @@ const RUN_NOISE_RADIUS := 120.0  # на каком расстоянии слыш
 const STEP_INTERVAL := 0.4       # как часто шумят шаги при беге, секунд
 const PUDDLE_NOISE_RADIUS := 100.0      # шаг по луже: так далеко слышно
 const PUDDLE_SNEAK_NOISE_RADIUS := 60.0 # то же крадучись — тише, но всё равно слышно
-const DOOR_REACH := 16.0         # с какого расстояния от проёма можно открыть или закрыть дверь
+const DOOR_REACH := 24.0         # с какого расстояния от проёма можно открыть или закрыть дверь
 
 # --- Свет ---
 const FLASHLIGHT_RANGE := 210.0
@@ -35,13 +35,13 @@ const FIST_REACH := 18.0      # дальность удара кулаком
 const FIST_COOLDOWN := 0.3    # пауза между ударами кулаком
 const HIT_ANGLE := 65.0       # удар задевает врагов в секторе ±65° перед героем
 const SWING_TIME := 0.12      # сколько длится анимация замаха
-const PICKUP_RADIUS := 18.0   # с какого расстояния можно подобрать оружие
+const PICKUP_RADIUS := 30.0   # с какого расстояния можно подобрать оружие
 
 # --- Спрайт ---
 const SPRITE_SHEET_PATH := "res://assets/sprites/sam.png"
 const SPRITE_DIRECTIONS := 32         # строки листа: направления, по 11,25° (0 — лицом к нам)
 const SPRITE_WALK_FRAMES := 4         # столбцы: 0 — стоит, 1 — шаг, 2 — стоит, 3 — шаг другой ногой
-const SPRITE_FOOT := Vector2(10, 24)  # где в клетке листа стоят ноги (см. tools/make_sam_sprites.py)
+const SPRITE_FOOT := Vector2(17, 40)  # где в клетке листа стоят ноги (см. tools/make_sam_sprites.py)
 const FEET_OFFSET := Vector2(0, 5)    # ноги чуть ниже центра героя (центр — середина круга столкновений)
 const STRIDE := 9.0                   # сколько пикселей пройти на один кадр шага
 const BREATH_SPEED := 2.2             # дыхание на месте: скорость
@@ -260,7 +260,7 @@ func _nearest_interactable() -> Node2D:
 	var best_distance := INF
 	for spot: HideSpot in get_tree().get_nodes_in_group("hide_spots"):
 		var distance := spot.distance_to_point(global_position)
-		if distance <= HideSpot.INTERACT_GAP and distance < best_distance:
+		if distance <= HideSpot.INTERACT_GAP and distance < best_distance and Game.line_of_sight(global_position,spot.global_position):
 			best = spot
 			best_distance = distance
 	for exit: LevelExit in get_tree().get_nodes_in_group("level_exits"):
@@ -270,10 +270,16 @@ func _nearest_interactable() -> Node2D:
 			best_distance = distance
 	for door: Door in get_tree().get_nodes_in_group("doors"):
 		var distance := door.distance_to_point(global_position)
-		if distance <= DOOR_REACH and distance < best_distance:
+		if distance <= DOOR_REACH and distance < best_distance and _can_reach_door(door):
 			best = door
 			best_distance = distance
 	return best
+
+
+func _can_reach_door(door: Door) -> bool:
+	var query := PhysicsRayQueryParameters2D.create(global_position, door.global_position, 1)
+	query.exclude = [door.get_rid()]
+	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
 
 func _enter_hiding(spot: HideSpot) -> void:
@@ -344,16 +350,20 @@ func _attack() -> void:
 		enemy.take_hit(kind, to_enemy.normalized())
 
 
-func _try_pickup() -> void:
+func nearby_weapon() -> WeaponItem:
 	var nearest: WeaponItem = null
 	var best := PICKUP_RADIUS
 	for item: WeaponItem in get_tree().get_nodes_in_group("weapon_items"):
 		if item.flying:
 			continue
 		var distance := item.global_position.distance_to(global_position)
-		if distance <= best:
+		if distance <= best and Game.line_of_sight(global_position,item.global_position):
 			best = distance
 			nearest = item
+	return nearest
+
+func _try_pickup() -> void:
+	var nearest := nearby_weapon()
 	if nearest:
 		weapon = nearest.weapon_name
 		nearest.queue_free()

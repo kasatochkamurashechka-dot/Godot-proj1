@@ -44,7 +44,7 @@ func _physics_process(delta: float) -> void:
 			if _timer <= 0.0:
 				state = State.CHASE
 	move_and_open_doors()
-	play_footsteps(delta, "step", -10.0)
+	play_footsteps(delta, "owner_step", -10.0)
 
 
 ## Услышал шум — идёт проверить (если ещё не гонится за героем, которого видит).
