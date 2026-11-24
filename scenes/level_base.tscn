@@ -1,0 +1,126 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="TileSet" path="res://resources/greybox_tileset.tres" id="2_tiles"]
+[ext_resource type="Script" path="res://scripts/room.gd" id="3_room"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="4_player"]
+[ext_resource type="Shader" path="res://shaders/vhs.gdshader" id="5_vhs"]
+[ext_resource type="Script" path="res://scripts/post_fx.gd" id="6_postfx"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vhs"]
+shader = ExtResource("5_vhs")
+
+[node name="Main" type="Node2D"]
+process_mode = 3
+script = ExtResource("1_main")
+
+[node name="Room" type="TileMapLayer" parent="." groups=["room"]]
+process_mode = 1
+tile_set = ExtResource("2_tiles")
+script = ExtResource("3_room")
+
+[node name="Decals" type="Node2D" parent="." groups=["decals"]]
+process_mode = 1
+
+[node name="Props" type="Node2D" parent="."]
+process_mode = 1
+
+[node name="Weapons" type="Node2D" parent="." groups=["weapons_root"]]
+process_mode = 1
+
+[node name="Enemies" type="Node2D" parent="."]
+process_mode = 1
+
+[node name="Player" parent="." instance=ExtResource("4_player")]
+process_mode = 1
+
+[node name="Darkness" type="CanvasModulate" parent="."]
+color = Color(0.3, 0.26, 0.38, 1)
+
+[node name="PostFX" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="Screen" type="ColorRect" parent="PostFX" groups=["postfx"]]
+material = SubResource("ShaderMaterial_vhs")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("6_postfx")
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="Hint" type="Label" parent="UI"]
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 600.0
+offset_bottom = 24.0
+theme_override_colors/font_color = Color(0.6, 0.5, 0.75, 1)
+theme_override_font_sizes/font_size = 10
+text = "UI_HINT"
+
+[node name="WeaponLabel" type="Label" parent="UI"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -30.0
+offset_right = 200.0
+offset_bottom = -8.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 16
+text = "WEAPON_FISTS"
+vertical_alignment = 2
+
+[node name="ObjectiveLabel" type="Label" parent="UI"]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 20.0
+offset_right = 200.0
+offset_bottom = 42.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 14
+text = "OBJ_FIND_KEYS"
+horizontal_alignment = 1
+
+[node name="DeathLabel" type="Label" parent="UI"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.2, 0.5, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 28
+text = "UI_DEAD"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClearLabel" type="Label" parent="UI"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.3, 1, 0.9, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 28
+text = "UI_FLOOR_CLEAR"
+horizontal_alignment = 1
+vertical_alignment = 1
