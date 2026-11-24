@@ -51,6 +51,8 @@ const HEAD_COLOR := Color(0.95, 0.78, 0.62)  # кулак при ударе бе
 const DEAD_TINT := Color(0.55, 0.5, 0.55)    # лежащий Сэм темнее
 
 var is_dead := false
+var combat_enabled := true
+var light_enabled := true
 var weapon := ""  # пустая строка — кулаки, иначе ключ из Weapons.DATA
 var is_hidden := false  # сидит в укрытии — враги не видят
 var flashlight_on := true  # фонарик (F): светит далеко, но враги замечают свет
@@ -105,7 +107,7 @@ func _physics_process(delta: float) -> void:
 
 	if Input.is_action_just_pressed("throw"):
 		_interact()
-	if Input.is_action_just_pressed("flashlight") and not is_hidden:
+	if light_enabled and Input.is_action_just_pressed("flashlight") and not is_hidden:
 		toggle_flashlight()
 
 	# В укрытии не двигаемся и не бьём, только ждём
@@ -118,7 +120,7 @@ func _physics_process(delta: float) -> void:
 	_attack_cooldown -= delta
 	_swing_timer -= delta
 
-	if Input.is_action_just_pressed("attack") and _attack_cooldown <= 0.0:
+	if combat_enabled and Input.is_action_just_pressed("attack") and _attack_cooldown <= 0.0:
 		_attack()
 
 	queue_redraw()
@@ -244,6 +246,8 @@ func _interact() -> void:
 			target.close()
 		else:
 			target.push(self, Input.is_action_pressed("sneak"))
+	elif not combat_enabled:
+		return
 	elif weapon == "":
 		_try_pickup()
 	else:

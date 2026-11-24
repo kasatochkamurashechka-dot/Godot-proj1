@@ -83,6 +83,9 @@ func take_hit(kind: String, dir: Vector2) -> void:
 	if is_dead:
 		return
 	if kind == "melee" or is_downed:
+		if has_meta("story_knockout"):
+			knock_down(dir, DOWNED_TIME)
+			return
 		kill(dir)
 	else:  # кулак или брошенный предмет — сбивают с ног
 		state = State.IDLE
@@ -94,6 +97,8 @@ func on_got_up() -> void:
 
 
 func _draw() -> void:
+	if has_node("StoryFigure"):
+		return
 	draw_circle(Depth.offset(self), 7.5, Depth.COLOR)  # тень
 	if is_dead or is_downed:
 		# Лежит: вытянутое тело головой по направлению удара

@@ -248,6 +248,8 @@ func on_got_up() -> void:
 
 
 func _draw() -> void:
+	if has_node("StoryFigure") and not is_creature:
+		return
 	draw_circle(Depth.offset(self), 10.0 if is_creature else 7.5, Depth.COLOR)  # тень
 	if is_dead or is_downed:
 		var color := CREATURE_COLOR if is_creature else UNIFORM_COLOR

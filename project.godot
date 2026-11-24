@@ -11,12 +11,13 @@ config_version=5
 [application]
 
 config/name="Motel Loop (prototype)"
-run/main_scene="res://scenes/motel/motel.tscn"
+run/main_scene="res://scenes/story/motel_333.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [autoload]
 
 Game="*res://scripts/game.gd"
+Run="*res://scripts/story/run.gd"
 
 [display]
 

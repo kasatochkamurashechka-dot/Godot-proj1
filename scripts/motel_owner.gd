@@ -238,6 +238,8 @@ func _follow_path(speed: float) -> bool:
 
 
 func _draw() -> void:
+	if has_node("StoryFigure"):
+		return
 	draw_circle(Depth.offset(self), 8.0, Depth.COLOR)  # тень
 	# Тело: коричневый костюм, седая голова
 	draw_circle(Vector2.ZERO, 7.5, SUIT_COLOR)
